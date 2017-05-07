@@ -1,10 +1,7 @@
 package moviescraper.doctord.model;
 
 import java.awt.image.RenderedImage;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FilenameFilter;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
@@ -857,6 +854,7 @@ public class Movie {
 		if(siteToParseFrom.getDiscardResults())
 			return null;
 		String searchString = siteToParseFrom.createSearchString(movieFile);
+		System.out.println("searchString = " + searchString);
 		SearchResult [] searchResults = null;
 		int searchResultNumberToUse = 0;
 		//no URL was passed in so we gotta figure it ourselves

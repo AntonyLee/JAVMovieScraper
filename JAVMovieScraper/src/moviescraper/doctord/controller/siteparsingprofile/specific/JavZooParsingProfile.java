@@ -9,6 +9,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import moviescraper.doctord.model.preferences.MoviescraperPreferences;
 import org.apache.commons.codec.net.URLCodec;
 import org.apache.commons.lang3.StringUtils;
 import org.jsoup.Jsoup;
@@ -43,7 +44,7 @@ import moviescraper.doctord.model.dataitem.Year;
 
 public class JavZooParsingProfile extends SiteParsingProfile implements SpecificProfile {
 
-	private static final String siteLanguageToScrape = "en";
+	private static String siteLanguageToScrape = "en";
 	
 	@Override
 	public List<ScraperGroupName> getScraperGroupNames()
@@ -55,11 +56,14 @@ public class JavZooParsingProfile extends SiteParsingProfile implements Specific
 	
 	public JavZooParsingProfile(Document doc) {
 		super(doc);
+		siteLanguageToScrape = MoviescraperPreferences.getInstance().getScrapeInJapanese() ? "cn" : "en";
 	}
 	
 	
 	
 	public JavZooParsingProfile() {
+		super();
+		siteLanguageToScrape = MoviescraperPreferences.getInstance().getScrapeInJapanese() ? "cn" : "en";
 		// TODO Auto-generated constructor stub
 	}
 
@@ -153,12 +157,13 @@ public class JavZooParsingProfile extends SiteParsingProfile implements Specific
 	
 	@Override
 	public ReleaseDate scrapeReleaseDate() {
-		Element releaseDateElement = document.select("div.container p:contains(Release Date:), div.container p:contains(發行日期:)").first();
+		Element releaseDateElement = document.select("div.container p:contains(Release Date:), div.container p:contains(發行日期:), div.container p:contains(发行时间:)").first();
 		if(releaseDateElement != null)
 		{
 			String releaseDateText = releaseDateElement.text().trim();
 			releaseDateText = releaseDateText.replace("Release Date:", "");
 			releaseDateText = releaseDateText.replace("發行日期:", "");
+			releaseDateText = releaseDateText.replace("发行时间:", "");
 			if(releaseDateText != null && releaseDateText.length() > 4)
 				return new ReleaseDate(releaseDateText.trim());
 		}
@@ -253,11 +258,12 @@ public class JavZooParsingProfile extends SiteParsingProfile implements Specific
 
 	@Override
 	public ID scrapeID() {
-		Element idElement = document.select("div.container p:contains(ID:)").first();
+		Element idElement = document.select("div.container p:contains(ID:), p:contains(识别码:)").first();
 		if(idElement != null)
 		{
 			String idText = idElement.text().trim();
 			idText = idText.replaceFirst(Pattern.quote("ID: "), "");
+			idText = idText.replaceFirst(Pattern.quote("识别码: "), "");
 			return new ID(idText);
 		}
 		else return ID.BLANK_ID;
@@ -312,7 +318,7 @@ public class JavZooParsingProfile extends SiteParsingProfile implements Specific
 
 	@Override
 	public ArrayList<Director> scrapeDirectors() {
-		Element directorElement = document.select("div.row.movie p:contains(Director:)").first();
+		Element directorElement = document.select("div.row.movie p:contains(Director:), p:contains(导演:)").first();
 		if(directorElement != null)
 		{
 			ArrayList<Director> directorList = new ArrayList<>(1);
@@ -326,11 +332,12 @@ public class JavZooParsingProfile extends SiteParsingProfile implements Specific
 
 	@Override
 	public Studio scrapeStudio() {
-		Element studioElement = document.select("div.row.movie p:contains(Studio:) ~ p a").first();
+		Element studioElement = document.select("div.row.movie p:contains(Studio:), p:contains(制作商:) ~ p a").first();
 		if(studioElement != null)
 		{
 			String studioText = studioElement.text().trim();
 			studioText = studioText.replaceFirst(Pattern.quote("Studio: "), "");
+			studioText = studioText.replaceFirst(Pattern.quote("アイデアポケット"), "IDEA POCKET");
 			return new Studio(studioText);
 		}
 		else return Studio.BLANK_STUDIO;
@@ -345,8 +352,11 @@ public class JavZooParsingProfile extends SiteParsingProfile implements Specific
 		URLCodec codec = new URLCodec();
 		try {
 			String fileNameURLEncoded = codec.encode(fileNameNoExtension);
-			String searchTerm = "http://www.javdog.com/" + siteLanguageToScrape  + "/search/" + fileNameURLEncoded;
-			
+			String searchTerm = "http://www.avmoo.com/" + siteLanguageToScrape  + "/search/" + fileNameURLEncoded;
+
+
+
+			System.out.println("searchTerm = " + searchTerm);
 			return searchTerm;
 					
 		} catch (Exception e) {
@@ -360,7 +370,7 @@ public class JavZooParsingProfile extends SiteParsingProfile implements Specific
 	public SearchResult[] getSearchResults(String searchString) throws IOException {
 		LinkedList<SearchResult> linksList = new LinkedList<>();
 		try{
-			Document doc = Jsoup.connect(searchString).userAgent("Mozilla").ignoreHttpErrors(true).timeout(SiteParsingProfile.CONNECTION_TIMEOUT_VALUE).get();
+			Document doc = Jsoup.connect(searchString).userAgent("Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.71 Safari/537.36").ignoreHttpErrors(true).timeout(SiteParsingProfile.CONNECTION_TIMEOUT_VALUE).get();
 			{
 				Elements divVideoLinksElements = doc.select("div.item:has(a[href*=/movie/])");
 

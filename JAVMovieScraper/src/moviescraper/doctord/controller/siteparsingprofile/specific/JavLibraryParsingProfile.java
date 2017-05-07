@@ -13,6 +13,7 @@ import java.util.regex.Pattern;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.net.URLCodec;
 import org.apache.commons.lang3.StringUtils;
+import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -411,51 +412,55 @@ public class JavLibraryParsingProfile extends SiteParsingProfile implements Spec
 		ArrayList<SearchResult> linksList = new ArrayList<>();
 		String websiteURLBegin = "http://www.javlibrary.com/" + siteLanguageToScrape;
 		try{
-		Document doc = Jsoup.connect(searchString).userAgent("Mozilla").ignoreHttpErrors(true).timeout(SiteParsingProfile.CONNECTION_TIMEOUT_VALUE).get();
-		//The search found the page directly
-		if(doc.baseUri().contains("/?v="))
-		{
-			String linkTitle = doc.title().replaceAll(Pattern.quote(" - JAVLibrary"), "");
-			Element posterElement = doc
-					.select("img#video_jacket_img")
-					.first();
-			//the page does not have the small version on it, but by replacing the last character of the string with an t, we will get the tiny preview
-			if(posterElement != null)
+//		Document doc = Jsoup.connect(searchString).userAgent("Mozilla").ignoreHttpErrors(true).timeout(SiteParsingProfile.CONNECTION_TIMEOUT_VALUE).get();
+			Connection conn = Jsoup.connect(searchString).userAgent("Mozilla").timeout(SiteParsingProfile.CONNECTION_TIMEOUT_VALUE);
+			Connection.Response response = conn.execute();
+			int statusCode = response.statusCode();
+			Document doc = conn.get();
+			//The search found the page directly
+			if(doc.baseUri().contains("/?v="))
 			{
-				String posterURLSmall = posterElement.attr("src");
-				posterURLSmall = posterURLSmall.substring(0, posterURLSmall.lastIndexOf('l')) + "t.jpg";
-				linksList.add(new SearchResult(doc.baseUri(), linkTitle, new Thumb(posterURLSmall)));
-			}
-			else 
-			{
-				linksList.add(new SearchResult(doc.baseUri(), linkTitle));
-			}
-			//System.out.println("Added " + doc.baseUri());
-			
-			return linksList.toArray(new SearchResult[linksList.size()]);
-		}
-		else
-		{
-			//The search didn't find an exact match and took us to the search results page
-			//We're filtering out anything that does not exactly match the id from the search query
-			
-			String searchId = new URLCodec().decode(searchString.replaceAll(".*\\?keyword=(.*)$", "$1")).toUpperCase();
-			Elements videoLinksElements = doc.select("div.video:has(div.id:matchesOwn(^"+Pattern.quote(searchId)+"$))");
-			
-			for(Element videoLink : videoLinksElements)
-			{
-				String currentLink = videoLink.select("a").attr("href");
-				String currentLinkLabel = videoLink.select("a").attr("title").trim();
-				String currentLinkImage = videoLink.select("img").attr("src");
-				if(currentLink.length() > 1)
+				String linkTitle = doc.title().replaceAll(Pattern.quote(" - JAVLibrary"), "");
+				Element posterElement = doc
+						.select("img#video_jacket_img")
+						.first();
+				//the page does not have the small version on it, but by replacing the last character of the string with an t, we will get the tiny preview
+				if(posterElement != null)
 				{
-					String fullLink = websiteURLBegin + currentLink.substring(1);
-					linksList.add(new SearchResult(fullLink,currentLinkLabel,new Thumb(currentLinkImage)));
-					//System.out.println("Added " + fullLink);
+					String posterURLSmall = posterElement.attr("src");
+					posterURLSmall = posterURLSmall.substring(0, posterURLSmall.lastIndexOf('l')) + "t.jpg";
+					linksList.add(new SearchResult(doc.baseUri(), linkTitle, new Thumb(posterURLSmall)));
 				}
+				else
+				{
+					linksList.add(new SearchResult(doc.baseUri(), linkTitle));
+				}
+				//System.out.println("Added " + doc.baseUri());
+
+				return linksList.toArray(new SearchResult[linksList.size()]);
 			}
-			return linksList.toArray(new SearchResult[linksList.size()]);
-		}
+			else
+			{
+				//The search didn't find an exact match and took us to the search results page
+				//We're filtering out anything that does not exactly match the id from the search query
+
+				String searchId = new URLCodec().decode(searchString.replaceAll(".*\\?keyword=(.*)$", "$1")).toUpperCase();
+				Elements videoLinksElements = doc.select("div.video:has(div.id:matchesOwn(^"+Pattern.quote(searchId)+"$))");
+
+				for(Element videoLink : videoLinksElements)
+				{
+					String currentLink = videoLink.select("a").attr("href");
+					String currentLinkLabel = videoLink.select("a").attr("title").trim();
+					String currentLinkImage = videoLink.select("img").attr("src");
+					if(currentLink.length() > 1)
+					{
+						String fullLink = websiteURLBegin + currentLink.substring(1);
+						linksList.add(new SearchResult(fullLink,currentLinkLabel,new Thumb(currentLinkImage)));
+						//System.out.println("Added " + fullLink);
+					}
+				}
+				return linksList.toArray(new SearchResult[linksList.size()]);
+			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
