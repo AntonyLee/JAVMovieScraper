@@ -20,6 +20,7 @@ import java.util.regex.Pattern;
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 
+import moviescraper.doctord.controller.UtilityFunctions;
 import org.apache.commons.io.FilenameUtils;
 import org.imgscalr.Scalr;
 import org.imgscalr.Scalr.Method;
@@ -200,18 +201,22 @@ public abstract class SiteParsingProfile implements DataItemSource{
 		else fileNameNoExtension = FilenameUtils.removeExtension(file.getName());
 		String fileNameNoExtensionNoDiscNumber = stripDiscNumber(fileNameNoExtension);
 		String[] splitFileName = fileNameNoExtensionNoDiscNumber.split(" ");
+
 		String lastWord = "";
 		if(firstWordOfFileIsID && splitFileName.length > 0)
 			lastWord = splitFileName[0];
 		else lastWord = splitFileName[splitFileName.length-1];
-		
+
+		String idTag = UtilityFunctions.findIDTagFromFileName(fileNameNoExtension);
+
+
 		//Some people like to enclose the ID number in parenthesis or brackets like this (ABC-123) or this [ABC-123] so this gets rid of that
 		//TODO: Maybe consolidate these lines of code using a single REGEX?
 		lastWord = lastWord.replace("(","");
 		lastWord = lastWord.replace(")","");
 		lastWord = lastWord.replace("[","");
 		lastWord = lastWord.replace("]","");
-		return lastWord;
+		return idTag;
 	}
 
 	public static String stripDiscNumber(String fileNameNoExtension) {

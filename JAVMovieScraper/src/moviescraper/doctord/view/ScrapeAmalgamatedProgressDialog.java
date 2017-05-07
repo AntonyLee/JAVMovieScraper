@@ -30,6 +30,7 @@ import javax.swing.JScrollPane;
 import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
 
+import moviescraper.doctord.controller.UtilityFunctions;
 import org.apache.commons.lang3.StringUtils;
 
 import moviescraper.doctord.controller.amalgamation.AllAmalgamationOrderingPreferences;
@@ -99,7 +100,8 @@ public class ScrapeAmalgamatedProgressDialog extends JDialog implements Runnable
 			File currentFile = filesWeAreScraping.get(currentFileIndexToScrape);
 			if (currentFile != null) {
 				String truncatedName = StringUtils.abbreviate(currentFile.getName(), maxLettersToDisplayOfFileName);
-				fileBeingScrapedLabel.setText("<html>Scraping: <b>" + truncatedName + "</b> ("
+                String idTag = UtilityFunctions.findIDTagFromFileName(truncatedName);
+				fileBeingScrapedLabel.setText("<html>Scraping: <b>" + idTag + "</b> ("
 						+ (currentFileIndexToScrape + 1) + "/" + filesWeAreScraping.size() + ")" + "</html>");
 			}
 		} else {
