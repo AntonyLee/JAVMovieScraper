@@ -302,32 +302,33 @@ public class GUIMain {
 
 			@Override
 			public void mousePressed(MouseEvent e) {
+
 				if(e.getClickCount() >= 2){
-					@SuppressWarnings("unchecked")
+//					@SuppressWarnings("unchecked")
 					JList<File> theList = (JList<File>) e.getSource();
-					try {
-						File doubleClickedFile  = theList.getSelectedValue();
-						if(doubleClickedFile != null && doubleClickedFile.exists() && doubleClickedFile.isDirectory())
-						{
-							try{
-								setCurrentlySelectedDirectoryList(doubleClickedFile);
-								frmMoviescraper.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-								updateFileListModel(getCurrentlySelectedDirectoryList(), false);
-							}
-							finally
-							{
-								getGuiSettings().setLastUsedDirectory(getCurrentlySelectedDirectoryList());
-								frmMoviescraper.setCursor(Cursor.getDefaultCursor());
-							}
+//					try {
+					File doubleClickedFile  = theList.getSelectedValue();
+					if(doubleClickedFile != null && doubleClickedFile.exists() && doubleClickedFile.isDirectory())
+					{
+						try{
+							setCurrentlySelectedDirectoryList(doubleClickedFile);
+							frmMoviescraper.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+							updateFileListModel(getCurrentlySelectedDirectoryList(), false);
 						}
-						else
+						finally
 						{
-							Desktop.getDesktop().open(theList.getSelectedValue());
+							getGuiSettings().setLastUsedDirectory(getCurrentlySelectedDirectoryList());
+							frmMoviescraper.setCursor(Cursor.getDefaultCursor());
 						}
-					} catch (IOException e1) {
-						// TODO Auto-generated catch block
-						e1.printStackTrace();
 					}
+//						else
+//						{
+//							Desktop.getDesktop().open(theList.getSelectedValue());
+//						}
+//					} catch (IOException e1) {
+//						// TODO Auto-generated catch block
+//						e1.printStackTrace();
+//					}
 				}
 
 			}
